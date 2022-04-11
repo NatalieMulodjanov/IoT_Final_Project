@@ -1,5 +1,4 @@
 from paho.mqtt import client as mqtt
-from queue import Queue
 import time
 
 
@@ -29,7 +28,7 @@ def subscribe(topic):
 
     # Looping the client enought time to get one message.
     client.loop_start()
-    time.sleep(0.5)
+    time.sleep(2)
     client.loop_stop()
 
     # Disconnecting the client.
