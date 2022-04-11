@@ -10,8 +10,16 @@ def subscribe(topic):
 
     # Callback method to get messages.
     def on_message(client, userdata, message):
-         global received
-         received = str(message.payload.decode("utf-8"))
+         global receivedTemp
+         global receivedHumidity
+         global receivedLight
+
+         if topic == "temperature":
+            receivedTemp = str(message.payload.decode("utf-8"))
+         elif topic == "humidity":
+            receivedHumidity = str(message.payload.decode("utf-8"))
+         elif topic == "light":
+            receivedLight = str(message.payload.decode("utf-8"))
 
 
     # Creating a new client instance.
@@ -35,4 +43,18 @@ def subscribe(topic):
     client.disconnect()
 
     # Returning the message
-    return received
+    if topic == "temperature":
+        try:
+            return receivedTemp
+        except:
+            return "0"
+    elif topic == "humidity":
+        try:
+            return receivedHumidity
+        except:
+            return "0"
+    elif topic == "light":
+        try:
+            return receivedLight
+        except:
+            return "0"
