@@ -5,7 +5,8 @@ from dash.dependencies import Input, Output
 from DHT11 import loop
 from MQTTClient import subscribe
 from led import setLED
-from emailClient import sendEmail
+from emailClient import sendEmail, receive_email
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -17,10 +18,10 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
 #Layout of the application (Dash components, HTML).
-app.layout = html.Div([
+app.layout = html.Div(children =[
     dcc.Interval(
         id='interval-component',
-        interval=1*1000,  # in milliseconds
+        interval=5*1000,  # in milliseconds
         n_intervals=0
     ),
     html.Div(
@@ -32,12 +33,17 @@ app.layout = html.Div([
         ]),
     html.Div(
         className="light",
-        style={'width': '50%'},
+        style={'width': '50%', "background": "black"},
         children=[
             dcc.Graph(id='live-update-graph-light')
-        ])
+        ]),
+    html.Img(id='fan_status', style={'width': '100%'})
 ])
 
+emailSent = False
+fanTurnedOn = False
+
+src = '/assets/fan_off.jpg'
 
 # Multiple components can update everytime interval gets fired.
 @app.callback(
@@ -53,15 +59,25 @@ def update_graph_live(n):
     #humidity = data[0]
     #temperature = data[1]
 
-    light = float(subscribe("light")) # Subscribing to the light topic
+    #light = float(subscribe("light")) # Subscribing to the light topic
+    humidity = float(subscribe("humidity"))
+    temp = float(subscribe("temperature"))
+    global emailSent
+    if temp > 23:
+        if emailSent == False:
+            sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?")
+            print("Email sent")
+            emailSent = True
+    
+    print("Hum: ", humidity)
+    print("Temp: ", temp)
 
     # notifications or actions
-    if (light < 400):
-        setLED(True)
-        sendEmail()
-    else:
-        setLED(False)
-
+    #if (light < 400):
+        #setLED(True)
+        #sendEmail("The Light is under 400! Turn on the lights please.")
+    #else:
+        #setLED(False)
 
 
     # Create the graph with subplots
@@ -69,14 +85,14 @@ def update_graph_live(n):
     # Humidity Gauge
     humidityFig = go.Figure(go.Indicator(
         mode="gauge+number",
-        value=10,
+        value=humidity,
         domain={'x': [0, 1], 'y': [0, 1]},
         title={'text': "Humidity"}))
 
     # Temperature Gauge
     temperatureFig = go.Figure(go.Indicator(
         mode="gauge+number",
-        value=10,
+        value=temp,
                          #   gauge={'axis': {'range': [-2, 11]},
                         #'steps': [
                          #   {'range': [-2, 0], 'color': "white"},
@@ -90,10 +106,19 @@ def update_graph_live(n):
     # Light Gauge
     lightFig = go.Figure(go.Indicator(
         mode="gauge+number",
-        value=light,
+        value=10,
         domain={'x': [0, 1], 'y': [0, 1]},
         title={'text': "Light"}))
 
+    global src
+    global fanTurnedOn
+    # receivedEmail = receive_email()
+    # print(receivedEmail["Content"])
+    # if "YES" in receivedEmail["Content"]:
+    #     # print("Turning on the fan")
+    #     # src='/assets/fan_on.jpg'
+    #     fanTurnedOn = True
+    #     # turnOnFan()
 
     return temperatureFig,humidityFig,lightFig
 

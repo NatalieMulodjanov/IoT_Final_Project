@@ -4,15 +4,23 @@ import time
 
 
 #broker_address = "192.168.0.189";
-broker_address = "10.0.0.248"
+broker_address = "10.0.0.100"
 
 
 def subscribe(topic):
 
     # Callback method to get messages.
     def on_message(client, userdata, message):
-         global received
-         received = str(message.payload.decode("utf-8"))
+         global receivedTemp
+         global receivedHumidity
+         global receivedLight
+
+         if topic == "temperature":
+            receivedTemp = str(message.payload.decode("utf-8"))
+         elif topic == "humidity":
+            receivedHumidity = str(message.payload.decode("utf-8"))
+         elif topic == "light":
+            receivedLight = str(message.payload.decode("utf-8"))
 
 
     # Creating a new client instance.
@@ -29,11 +37,26 @@ def subscribe(topic):
 
     # Looping the client enought time to get one message.
     client.loop_start()
-    time.sleep(0.5)
+    time.sleep(2)
     client.loop_stop()
 
     # Disconnecting the client.
     client.disconnect()
-
+    
     # Returning the message
-    return received
+    if topic == "temperature":
+        try:
+            return receivedTemp
+        except:
+            return "0"
+    elif topic == "humidity":
+        try:
+            return receivedHumidity
+        except:
+            return "0"
+    elif topic == "light":
+        try:
+            return receivedLight
+        except:
+            return "0"
+    
