@@ -2,7 +2,7 @@
 #include <PubSubClient.h>
 #include <Wire.h>
 #include "DHT.h"
-#define LIGHT_SENSOR_PIN 34 // ESP32 pin GIOP34 (ADC0)
+#define LIGHT_SENSOR_PIN 23 // ESP32 pin GIOP34 (ADC0)
 
 #define DHTPIN 32 // Pin connected to the DHT sensor
 
@@ -61,6 +61,7 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+//prints the message and depending on the message, turns the led on or off.
 void callback(char* topic, byte* message, unsigned int length) {
   Serial.print("Message arrived on topic: ");
   Serial.print(topic);
@@ -77,18 +78,18 @@ void callback(char* topic, byte* message, unsigned int length) {
 
   // If a message is received on the topic esp32/output, you check if the message is either "on" or "off". 
   // Changes the output state according to the message
-//  if (String(topic) == "esp32/output") {
-//    Serial.print("Changing output to ");
-//    if(messageTemp == "on"){
-//      Serial.println("on");
-//      digitalWrite(ledPin, HIGH);
+// if (String(topic) == "esp32/output") {
+//   Serial.print("Changing output to ");
+//   if(messageTemp == "on"){
+//     Serial.println("on");
+//     digitalWrite(ledPin, HIGH);
+//   }
+//   else if(messageTemp == "off"){
+//     Serial.println("off");
+//     digitalWrite(ledPin, LOW);
 //    }
-//    else if(messageTemp == "off"){
-//      Serial.println("off");
-//      digitalWrite(ledPin, LOW);
-    }
-//  }
-//}
+// }
+}
 
 void reconnect() {
   // Loop until we're reconnected
@@ -131,16 +132,16 @@ void loop() {
   String hs="Hum: "+String((float)h)+" % ";
   String ts="Temp: "+String((float)t)+" C "; 
   
-//  client.loop();
-//  
-//  int analogValue = getLight();
+ //client.loop();
+ 
+ int analogValue;
+ analogValue = getLight();
+ delay(1000);
+
+ char lightString[8];
+ dtostrf(analogValue, 1, 2, lightString);
   
-//  delay(1000);
-// 
-//  char lightString[8];
-//  dtostrf(analogValue, 1, 2, lightString);
-//
-//  client.publish("light", lightString);
+ client.publish("light", lightString);
 
   // PUBLISH to the MQTT Broker (topic = Temperature, defined at the beginning)
   if (client.publish("temperature", String(t).c_str())) {

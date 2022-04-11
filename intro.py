@@ -17,6 +17,10 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 #Importing and cleaning data to be used.
 
 
+
+#fan picture for dashboard
+srcImg = '/assets/fan_off.jpg'
+
 #Layout of the application (Dash components, HTML).
 app.layout = html.Div(children =[
     dcc.Interval(
@@ -37,13 +41,12 @@ app.layout = html.Div(children =[
         children=[
             dcc.Graph(id='live-update-graph-light')
         ]),
-    html.Img(id='fan_status', style={'width': '100%'})
+    html.Img(id='fan_status', src=srcImg ,style={'width': '100%'})
 ])
 
 emailSent = False
 fanTurnedOn = False
 
-src = '/assets/fan_off.jpg'
 
 # Multiple components can update everytime interval gets fired.
 @app.callback(
@@ -55,11 +58,8 @@ src = '/assets/fan_off.jpg'
 def update_graph_live(n):
 
     # Collect some data
-    #data = loop()
-    #humidity = data[0]
-    #temperature = data[1]
 
-    #light = float(subscribe("light")) # Subscribing to the light topic
+    light = float(subscribe("light")) # Subscribing to the light topic
     humidity = float(subscribe("humidity"))
     temp = float(subscribe("temperature"))
     global emailSent
@@ -71,13 +71,15 @@ def update_graph_live(n):
     
     print("Hum: ", humidity)
     print("Temp: ", temp)
-
+    print("Light:", light)
     # notifications or actions
-    #if (light < 400):
-        #setLED(True)
-        #sendEmail("The Light is under 400! Turn on the lights please.")
-    #else:
-        #setLED(False)
+    if (light < 400):
+        if emailSent == False:
+            setLED(True)
+            sendEmail("The Light is under 400! Turn on the lights please.")
+            emailSent = True
+    else:
+        setLED(False)
 
 
     # Create the graph with subplots
@@ -93,20 +95,13 @@ def update_graph_live(n):
     temperatureFig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=temp,
-                         #   gauge={'axis': {'range': [-2, 11]},
-                        #'steps': [
-                         #   {'range': [-2, 0], 'color': "white"},
-                          #  {'range': [0, 7], 'color': "white"},
-                           # {'range': [7, 11], 'color': "white"}],
-                        #'threshold': {'line': {'color': "black", 'width': 1}, 'thickness': 1, 'value': 7}},
-        # width=200,
         domain={'x': [0, 1], 'y': [0, 1]},
         title={'text': "Temperature"}))
 
     # Light Gauge
     lightFig = go.Figure(go.Indicator(
         mode="gauge+number",
-        value=10,
+        value=light,
         domain={'x': [0, 1], 'y': [0, 1]},
         title={'text': "Light"}))
 

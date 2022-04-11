@@ -7,7 +7,7 @@ import email
 def sendEmail(subject):
     sender_email = "nataliemulodjanov@gmail.com"
     receiver_email = "nataliemulodjanov@gmail.com"
-    password = ""
+    password = "Canada01"
 
     # message = MIMEMultipart("alternative")
     # message["Subject"] = "Light is under 400!"
@@ -38,7 +38,7 @@ def sendEmail(subject):
 
 def receive_email():
     mail = imaplib.IMAP4_SSL('imap.gmail.com')
-    mail.login('nataliemulodjanov@gmail.com', '')
+    mail.login('nataliemulodjanov@gmail.com', 'Canada01')
     mail.list()
     # Out: list of "folders" aka labels in gmail.
     mail.select("inbox") # connect to inbox.

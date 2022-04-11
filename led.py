@@ -2,13 +2,14 @@ import RPi.GPIO as GPIO
 import time
 
 def setLED(option):
+    LEDPIN = 21
     try:        
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(17,GPIO.OUT)
+        GPIO.setup(LEDPIN,GPIO.OUT)
         if option == True:
-            GPIO.output(17,GPIO.HIGH)
+            GPIO.output(LEDPIN,GPIO.HIGH)
         else:
-            GPIO.output(17,GPIO.LOW)
+            GPIO.output(LEDPIN,GPIO.LOW)
     except:        
         GPIO.cleanup()
         setLED(option)
