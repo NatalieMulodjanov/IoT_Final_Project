@@ -1,0 +1,9 @@
+.temp {
+    width: 50%;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.plot-container {
+    width: 50vh;
+}
