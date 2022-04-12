@@ -38,7 +38,7 @@ def sendEmail(subject):
 
 def receive_email():
     mail = imaplib.IMAP4_SSL('imap.gmail.com')
-    mail.login('nataliemulodjanov@gmail.com', '')
+    mail.login('mankiratsinghsarwara@gmail.com', 'mankirat1')
     mail.list()
     # Out: list of "folders" aka labels in gmail.
     mail.select("inbox") # connect to inbox.

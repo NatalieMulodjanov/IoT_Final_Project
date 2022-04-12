@@ -10,15 +10,15 @@ def subscribe(topic):
 
     # Callback method to get messages.
     def on_message(client, userdata, message):
-         global receivedTemp
-         global receivedHumidity
-         global receivedLight
+        global receivedTemp
+        global receivedHumidity
+        global receivedLight
 
-         if topic == "temperature":
+        if topic == "temperature":
             receivedTemp = str(message.payload.decode("utf-8"))
-         elif topic == "humidity":
+        elif topic == "humidity":
             receivedHumidity = str(message.payload.decode("utf-8"))
-         elif topic == "light":
+        elif topic == "light":
             receivedLight = str(message.payload.decode("utf-8"))
 
 
