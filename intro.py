@@ -41,7 +41,7 @@ app.layout = html.Div(children =[
                     children=[
                         html.Br(),
                         daq.Gauge(id='live-update-graph-temp', showCurrentValue=True, label='Temperature', max=50, min=0),
-                        daq.Gauge(id='live-update-graph-humidity', showCurrentValue=True, label='Humidity',max=50, min=0),
+                        daq.Gauge(id='live-update-graph-humidity', showCurrentValue=True, label='Humidity',max=100, min=0),
                         html.Br()
                     ]),
                     html.Td(
@@ -65,9 +65,6 @@ app.layout = html.Div(children =[
         ])
 ])
 
-emailSent = False
-fanTurnedOn = False
-
 
 # Multiple components can update everytime interval gets fired.
 @app.callback(
@@ -81,12 +78,25 @@ fanTurnedOn = False
 
 def update_graph_live(n):
 
+    #----------- SET INITIAL VALUES ------------
+    global emailSent
+    global led_src
+    global light_notif
+    global fanTurnedOn
+
+    emailSent = False
+    fanTurnedOn = False
+
+
+
     # --------- DATA COLLECTION ----------------
 
     # Fetching light, humidity, and temp via MQTT.
     light = float(subscribe("light")) # Subscribing to the light topic
-    humidity = float(subscribe("humidity"))
-    temp = float(subscribe("temperature"))
+
+    data = loop()
+    humidity = data[0]
+    temp = data[1]
 
     # Printing the fetched values.
     print("Hum: ", humidity)
@@ -95,32 +105,42 @@ def update_graph_live(n):
 
     #  --------- NOTIFICATIONS OR ACTIONS ------------
 
-    # Sending an email if temp is under 23.
-    global emailSent
-    if temp > 23:
+    # Checking temperature and light and performing actions based on constraints.
+    if temp > 24.0 and light < 400:
         if emailSent == False:
+            setLED(True)
+            led_src = '/assets/light_on.png'
+            light_notif = True
             sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?")
-            print("Email sent")
+            sendEmail("The Light is under 400! Turn on the lights please.")
             emailSent = True
-
-    # Changing the fan image depending on status.
-    if (fanTurnedOn == True):
-         fan_src = '/assets/fan_on.png'
-    else:
-        fan_src = '/assets/fan_off.png'
-
-    # Changing LED status, sending email, showing notification depending on light value.
-    if (light < 400):
+            print("Temperature and Light Emails Sent!")
+    elif temp > 24.0:
+        if emailSent == False:
+            setLED(False)
+            light_notif = False
+            led_src = '/assets/light_off.png'
+            sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?")
+            emailSent = True
+            print("Temperature Email Sent!")
+    elif light < 400:
         if emailSent == False:
             setLED(True)
             light_notif = True
             led_src = '/assets/light_on.png'
             sendEmail("The Light is under 400! Turn on the lights please.")
             emailSent = True
+            print("Light Email Sent!")
     else:
         setLED(False)
         light_notif = False
         led_src = '/assets/light_off.png'
+
+    # Changing the fan image depending on status.
+    if (fanTurnedOn == True):
+         fan_src = '/assets/fan_on.png'
+    else:
+        fan_src = '/assets/fan_off.png'
 
     return temp,humidity,light,led_src,light_notif,fan_src
 

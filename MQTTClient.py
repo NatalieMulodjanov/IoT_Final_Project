@@ -3,7 +3,7 @@ import time
 
 
 #broker_address = "192.168.0.189";
-broker_address = "10.0.0.248"
+broker_address = "10.0.0.247"
 
 
 def subscribe(topic):

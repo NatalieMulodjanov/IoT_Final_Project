@@ -14,11 +14,12 @@ DHTPin = 11      #define the pin of DHT11
 
 def loop():
     try:
+        GPIO.setmode(GPIO.BOARD)
         dht = DHT.DHT(DHTPin)
         chk = dht.readDHT11()     #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
         if (chk is not dht.DHTLIB_OK):      #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
             return 0,0
+        GPIO.cleanup()
         return dht.humidity,dht.temperature
     except:
         GPIO.cleanup()
-        loop()

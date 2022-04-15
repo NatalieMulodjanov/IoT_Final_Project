@@ -1,30 +1,28 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
-#include "DHT.h"
-#define LIGHT_SENSOR_PIN 23 // ESP32 pin GIOP34 (ADC0)
+#include <DHT.h>
 
-#define DHTPIN 32 // Pin connected to the DHT sensor
+#define DHT_SENSOR_PIN 35 // Pin connected to the DHT sensor
+#define DHT_SENSOR_TYPE DHT11  // DHT11 or DHT22
+DHT dht(DHT_SENSOR_TYPE, DHT_SENSOR_TYPE);
 
-// Code for the ESP8266
-//#include "ESP8266WiFi.h"  // Enables the ESP8266 to connect to the local network (via WiFi)
-//#define DHTPIN D5         // Pin connected to the DHT sensor
-
-#define DHTTYPE DHT11  // DHT11 or DHT22
-DHT dht(DHTPIN, DHTTYPE);
-
+const int lightPin = 34; // pin 34
 
 // Replace the next variables with your SSID/Password comValbination
 //const char* ssid = "TP-Link_2AD8";
 //const char* password = "14730078";
 
-const char* ssid = "Vladimir Computin 2.4 GHz";
-const char* password = "whatpassword";
+const char* ssid = "Sarwara";
+const char* password = "Aprajit1";
+
+//const char* ssid = "Vladimir Computin 2.4 GHz";
+//const char* password = "whatpassword";
 
 // Add your MQTT Broker IP address, example
 //const char* mqtt_server = "192.168.0.189";
-const char* mqtt_server = "10.0.0.100";
-
+//const char* mqtt_server = "10.0.0.100";
+const char* mqtt_server = "10.0.0.247";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -73,22 +71,6 @@ void callback(char* topic, byte* message, unsigned int length) {
     messageTemp += (char)message[i];
   }
   Serial.println();
-
-  // Feel free to add more if statements to control more GPIOs with MQTT
-
-  // If a message is received on the topic esp32/output, you check if the message is either "on" or "off". 
-  // Changes the output state according to the message
-// if (String(topic) == "esp32/output") {
-//   Serial.print("Changing output to ");
-//   if(messageTemp == "on"){
-//     Serial.println("on");
-//     digitalWrite(ledPin, HIGH);
-//   }
-//   else if(messageTemp == "off"){
-//     Serial.println("off");
-//     digitalWrite(ledPin, LOW);
-//    }
-// }
 }
 
 void reconnect() {
@@ -98,8 +80,6 @@ void reconnect() {
     // Attempt to connect
     if (client.connect("ESP8266Client")) {
       Serial.println("connected");
-      // Subscribe
-      client.subscribe("esp32/output");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -117,64 +97,19 @@ void loop() {
     reconnect();
   }
 
-  Serial.println("Mqtt broker is ready to receive messages");
-  float h = dht.readHumidity();
-  float t = dht.readTemperature();
-  
-  Serial.print("Humidity: ");
-  Serial.print(h);
-  Serial.println(" %");
-  Serial.print("Temperature: ");
-  Serial.print(t);
-  Serial.println(" *C");
-
-  // MQTT can only transmit strings
-  String hs="Hum: "+String((float)h)+" % ";
-  String ts="Temp: "+String((float)t)+" C "; 
-  
- //client.loop();
- 
- int analogValue;
- analogValue = getLight();
- delay(1000);
+ // Reading all the values needed.
+ int lightValue = analogRead(lightPin);
+ Serial.print("Light: ");
+ Serial.println(lightValue);
 
  char lightString[8];
- dtostrf(analogValue, 1, 2, lightString);
+ dtostrf(lightValue, 1, 2, lightString);
   
  client.publish("light", lightString);
+  
+ client.disconnect();  // disconnect from the MQTT broker
+ delay(1000*1);       // print new values every 1 Second
 
-  // PUBLISH to the MQTT Broker (topic = Temperature, defined at the beginning)
-  if (client.publish("temperature", String(t).c_str())) {
-    Serial.println("Temperature sent!");
-  }
-  // Again, client.publish will return a boolean value depending on whether it succeded or not.
-  // If the message failed to send, we will try again, as the connection may have broken.
-  else {
-    Serial.println("Temperature failed to send. Reconnecting to MQTT Broker and trying again");
-    client.connect("ESP8266Client");
-    delay(10); // This delay ensures that client.publish doesn't clash with the client.connect call
-    client.publish("temperature", String(t).c_str());
-  }
-
-  // PUBLISH to the MQTT Broker (topic = Humidity, defined at the beginning)
-  if (client.publish("humidity", String(h).c_str())) {
-    Serial.println("Humidity sent!");
-  }
-  // Again, client.publish will return a boolean value depending on whether it succeded or not.
-  // If the message failed to send, we will try again, as the connection may have broken.
-  else {
-    Serial.println("Humidity failed to send. Reconnecting to MQTT Broker and trying again");
-    client.connect("ESP8266Client");
-    delay(10); // This delay ensures that client.publish doesn't clash with the client.connect call
-    client.publish("humidity", String(h).c_str());
-  }
-  client.disconnect();  // disconnect from the MQTT broker
-  delay(1000*1);       // print new values every 1 Minute
-
-}
-
-int getLight(){
-  return analogRead(LIGHT_SENSOR_PIN);
 }
 
 
