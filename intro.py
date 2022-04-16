@@ -87,8 +87,6 @@ def update_graph_live(n):
     emailSent = False
     fanTurnedOn = False
 
-
-
     # --------- DATA COLLECTION ----------------
 
     # Fetching light, humidity, and temp via MQTT.
@@ -106,29 +104,33 @@ def update_graph_live(n):
     #  --------- NOTIFICATIONS OR ACTIONS ------------
 
     # Checking temperature and light and performing actions based on constraints.
-    if temp > 24.0 and light < 400:
+    if temp > 25.0 and light < 1800:
         if emailSent == False:
             setLED(True)
             led_src = '/assets/light_on.png'
             light_notif = True
-            sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?")
-            sendEmail("The Light is under 400! Turn on the lights please.")
+            print("Test 1")
+            #sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?")
+            #sendEmail("The Light is under 400! Turn on the lights please.")
             emailSent = True
             print("Temperature and Light Emails Sent!")
-    elif temp > 24.0:
+    elif temp > 25.0:
         if emailSent == False:
             setLED(False)
             light_notif = False
+            print("Test 2")
             led_src = '/assets/light_off.png'
-            sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?")
+            #sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?")
             emailSent = True
             print("Temperature Email Sent!")
-    elif light < 400:
+    elif light < 1800:
         if emailSent == False:
             setLED(True)
             light_notif = True
             led_src = '/assets/light_on.png'
-            sendEmail("The Light is under 400! Turn on the lights please.")
+            print("the img has been changed")
+            #sendEmail("The Light is under 400! Turn on the lights please.")
+            print("the email is sent")
             emailSent = True
             print("Light Email Sent!")
     else:

@@ -5,9 +5,14 @@ import imaplib
 import email
 
 def sendEmail(subject):
+
+    print("test 1")
+
     sender_email = "mankirattest@gmail.com"
     receiver_email = "mankiratsinghsarwara@gmail.com"
     password = "mankirat1"
+
+    print("test 2")
 
     # message = MIMEMultipart("alternative")
     # message["Subject"] = "Light is under 400!"
@@ -19,14 +24,21 @@ def sendEmail(subject):
     message["From"] = sender_email
     message["To"] = receiver_email
 
+    print("Test 3")
+
     # Create the plain-text and HTML version of your message
 
     # Turn these into plain/html MIMEText objects
     part1 = MIMEText(subject, "plain")
 
+    print("Test 4")
+
+
     # Add HTML/plain-text parts to MIMEMultipart message
     # The email client will try to render the last part first
     message.attach(part1)
+
+    print("Test 5")
 
     # Create secure connection with server and send email
     context = ssl.create_default_context()
@@ -35,6 +47,7 @@ def sendEmail(subject):
         server.sendmail(
             sender_email, receiver_email, message.as_string()
         )
+    print("Test 8")
 
 def receive_email():
     mail = imaplib.IMAP4_SSL('imap.gmail.com')

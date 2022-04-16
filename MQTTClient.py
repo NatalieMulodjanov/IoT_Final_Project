@@ -1,9 +1,9 @@
 from paho.mqtt import client as mqtt
 import time
 
-
-#broker_address = "192.168.0.189";
-broker_address = "10.0.0.247"
+#broker_address = "172.20.10.4";
+broker_address = "192.168.0.189";
+#broker_address = "10.0.0.247"
 
 
 def subscribe(topic):
