@@ -13,6 +13,7 @@ def subscribe(topic):
         global receivedTemp
         global receivedHumidity
         global receivedLight
+        global receivedRfidUser
 
         if topic == "temperature":
             receivedTemp = str(message.payload.decode("utf-8"))
@@ -20,6 +21,8 @@ def subscribe(topic):
             receivedHumidity = str(message.payload.decode("utf-8"))
         elif topic == "light":
             receivedLight = str(message.payload.decode("utf-8"))
+        elif topic == "user_rfid":
+            receivedRfidUser = str(message.payload.decode("utf-8"))
 
 
     # Creating a new client instance.
@@ -58,3 +61,5 @@ def subscribe(topic):
             return receivedLight
         except:
             return "0"
+    elif topic == "use_rfid":
+        return receivedRfidUser
