@@ -9,6 +9,21 @@ from emailClient import sendEmail, receive_email
 from fan import turnOnFan
 import connectionManager
 
+from DCMotor import startMotor
+
+global tempEmailSent
+global lightEmailSent
+global led_src
+global fan_src
+global light_notif
+global emailRequestSent
+
+lightEmailSent = False
+tempEmailSent = False
+led_src = '/assets/light_off.png'
+fan_src = '/assets/fan_off.png'
+emailRequestSent = False
+light_notif = False
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -59,7 +74,13 @@ fanTurnedOn = False
 
 def update_graph_live(n):
 
-    # Collect some data
+    # ---------- Calling Global Variables ------
+    global tempEmailSent
+    global lightEmailSent
+    global led_src
+    global fan_src
+    global light_notif
+    global emailRequestSent
 
     light = float(subscribe("light")) # Subscribing to the light topic
     humidity = float(subscribe("humidity"))
@@ -78,15 +99,64 @@ def update_graph_live(n):
     print("Hum: ", humidity)
     print("Temp: ", temp)
     print("Light:", light)
-    # notifications or actions
-    if (light < user[2]):
-        if emailSent == False:
-            setLED(True)
-            sendEmail("The Light is under 400! Turn on the lights please.")
-            emailSent = True
-    else:
-        setLED(False)
 
+    #  --------- NOTIFICATIONS OR ACTIONS ------------
+
+    # Checking temperature and light and performing actions based on constraints.
+    if temp > user[1] and light < user[2]:
+        led_src = '/assets/light_on.png' # Changing the LED image.
+        light_notif = True # Send a notification that LED is on.
+        if tempEmailSent == False: # If an email has not been sent yet.
+            sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?") # Send temperature email.
+            tempEmailSent = True # The email has been sent.
+            emailRequestSent = True # Check for a response.
+            print("Temperature email sent!") # CMD Line notification that emails have been sent.
+        if lightEmailSent == False:
+            sendEmail("The Light is under 400! Turn on the lights please.") # Send light email.
+            lightEmailSent = True
+            print("Light email sent!")
+    elif temp > user[1]:
+        light_notif = False # Don't send a LED notification.
+        led_src = '/assets/light_off.png' # Changing the LED image.
+        if tempEmailSent == False: # If an email has not been sent yet.
+            sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?") # Sending temperature email.
+            tempEmailSent = True # The email has been sent.
+            emailRequestSent = True # Check for a response.
+            print("Temperature Email Sent!") # CMD Line notification that an email has been sent.
+    elif light < user[2]:
+        light_notif = True # Send a LED notification.
+        led_src = '/assets/light_on.png' # Change the LED image.
+        if lightEmailSent == False: # If an email has not been sent yet.
+            sendEmail("The Light is under 400! Turn on the lights please.") # Send light email.
+            lightEmailSent = True # The email has been sent.
+            emailRequestSent = False # We are not waiting for a response.
+            print("Light Email Sent!") # CMD Line notification that an email has been sent.
+    else:
+        light_notif = False # No LED notification.
+        lightEmailSent = False
+        tempEmailSent = False
+        emailRequestSent = False # We are not awaiting a response.
+        led_src = '/assets/light_off.png' # Changing the LED image.
+        fan_src = '/assets/fan_off.png' # Set the image to fan off.
+
+    if emailRequestSent:
+        print("Checking email for response.")
+        if receive_email():
+            print("Response: Yes")
+            fan_src = '/assets/fan_on.png' # Change the image.
+            startMotor() # Turn on the fan.
+            print("The fan is turned on!") # CMD line notif.
+            emailRequestSent = False
+            tempEmailSent = False
+            fanTurnedOn = True # The fan is on.
+        else:
+            print("No response.")
+            fanTurnedOn = False # The fan is off.
+            fan_src = '/assets/fan_off.png' # Set the image to fan off.
+
+
+    if (light_notif):
+        setLED() # Turning on the LED.
 
     # Create the graph with subplots
 
@@ -112,7 +182,6 @@ def update_graph_live(n):
         title={'text': "Light"}))
 
     global src
-    global fanTurnedOn
     receivedEmail = receive_email()
     print(receivedEmail["Content"])
     if "YES" in receivedEmail["Content"]:

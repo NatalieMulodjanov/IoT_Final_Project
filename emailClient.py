@@ -3,16 +3,17 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import imaplib
 import email
+import easyimap as imap
 
 def sendEmail(subject):
 
-    print("test 1")
+    #print("test 1")
 
     sender_email = "mankirattest@gmail.com"
-    receiver_email = "mankiratsinghsarwara@gmail.com"
+    receiver_email = "mankirattest@gmail.com"
     password = "mankirat1"
 
-    print("test 2")
+    #print("test 2")
 
     # message = MIMEMultipart("alternative")
     # message["Subject"] = "Light is under 400!"
@@ -24,21 +25,21 @@ def sendEmail(subject):
     message["From"] = sender_email
     message["To"] = receiver_email
 
-    print("Test 3")
+    #print("Test 3")
 
     # Create the plain-text and HTML version of your message
 
     # Turn these into plain/html MIMEText objects
     part1 = MIMEText(subject, "plain")
 
-    print("Test 4")
+    #print("Test 4")
 
 
     # Add HTML/plain-text parts to MIMEMultipart message
     # The email client will try to render the last part first
     message.attach(part1)
 
-    print("Test 5")
+    #print("Test 5")
 
     # Create secure connection with server and send email
     context = ssl.create_default_context()
@@ -47,48 +48,11 @@ def sendEmail(subject):
         server.sendmail(
             sender_email, receiver_email, message.as_string()
         )
-    print("Test 8")
+    #print("Test 8")
 
 def receive_email():
-    mail = imaplib.IMAP4_SSL('imap.gmail.com')
-    mail.login('mankiratsinghsarwara@gmail.com', 'mankirat1')
-    mail.list()
-    # Out: list of "folders" aka labels in gmail.
-    mail.select("inbox") # connect to inbox.
-    result, data = mail.search(None, "ALL")
-
-    mail_ids = []
-    for block in data:
-        mail_ids += block.split()
-
-    status, data = mail.fetch(mail_ids[mail_ids.__len__() - 1], '(RFC822)')
-    for response_part in data:
-        # so if its a tuple...
-        if isinstance(response_part, tuple):
-            message = email.message_from_bytes(response_part[1])
-
-            mail_from = message['from']
-            mail_subject = message['subject']
-
-            # then for the text we have a little more work to do
-            # because it can be in plain text or multipart
-            # if its not plain text we need to separate the message
-            # from its annexes to get the text
-            if message.is_multipart():
-                mail_content = ''
-
-                # on multipart we have the text message and
-                # another things like annex, and html version
-                # of the message, in that case we loop through
-                # the email payload
-                for part in message.get_payload():
-                    # if the content type is text/plain
-                    # we extract it
-                    if part.get_content_type() == 'text/plain':
-                        mail_content += part.get_payload()
-            else:
-                # if the message isn't multipart, just extract it
-                mail_content = message.get_payload()
-
-            # and then let's show its result
-            return {"From": mail_from, "Subject": mail_subject, "Content": mail_content}
+    server = imap.connect("imap.gmail.com", "mankirattest@gmail.com", "mankirat1")
+    server.change_mailbox("Inbox")
+    server.listids()
+    email = server.mail(server.listids()[0])
+    return email.body.strip()[0:3].lower() == 'yes'
