@@ -10,22 +10,22 @@ DHT dht(DHT_SENSOR_TYPE, DHT_SENSOR_TYPE);
 const int lightPin = 34; // pin 34
 
 // Replace the next variables with your SSID/Password comValbination
-const char* ssid = "TP-Link_2AD8";
-const char* password = "14730078";
+//const char* ssid = "TP-Link_2AD8";
+//const char* password = "14730078";
 
 //const char* ssid = "Patrick Starfish";
 //const char* password = "mankirat1";
 
-//const char* ssid = "Sarwara";
-//const char* password = "Aprajit1";
+const char* ssid = "Sarwara";
+const char* password = "Aprajit1";
 
 //const char* ssid = "Vladimir Computin 2.4 GHz";
 //const char* password = "whatpassword";
 
 // Add your MQTT Broker IP address, example
-const char* mqtt_server = "192.168.0.189";
+//const char* mqtt_server = "192.168.0.189";
 //const char* mqtt_server = "10.0.0.100";
-//const char* mqtt_server = "10.0.0.247";
+const char* mqtt_server = "10.0.0.247";
 //const char* mqtt_server = "172.20.10.4";
 
 
