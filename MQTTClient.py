@@ -61,5 +61,8 @@ def subscribe(topic):
             return receivedLight
         except:
             return "0"
-    elif topic == "use_rfid":
-        return receivedRfidUser
+    elif topic == "user_rfid":
+        try:
+            return receivedRfidUser
+        except:
+            return "admin"

@@ -7,17 +7,28 @@
 #include <DHT.h>
 
 //Constants
-#define SS_PIN 27
-#define RST_PIN 25
+#define SS_PIN 5
+#define RST_PIN 0
 
 #define DHT_SENSOR_PIN 35 // Pin connected to the DHT sensor
 #define DHT_SENSOR_TYPE DHT11  // DHT11 or DHT22
 
 const int lightPin = 34; // pin 34
 
-const char* ssid = "Vladimir Computin 2.4 GHz";                 // Your personal network SSID
-const char* wifi_password = "whatpassword"; // Your personal network password
-const char* mqtt_server = "10.0.0.100";  // IP of the MQTT broker
+//const char* ssid = "Vladimir Computin 2.4 GHz";                 // Your personal network SSID
+//const char* wifi_password = "whatpassword"; // Your personal network password
+
+const char* ssid = "Sarwara";
+const char* wifi_password = "Aprajit1";
+
+
+//const char* ssid = "TP-Link_2AD8";
+//const char* password = "14730078";
+
+
+//const char* mqtt_server = "10.0.0.100";  // IP of the MQTT broker
+const char* mqtt_server = "10.0.0.247";
+
 const char* user_rfid_topic = "user_rfid";
 const char* light_topic = "light";
 const char* temperature_topic = "temperature";
@@ -147,13 +158,15 @@ void loop() {
     }
     readLight();
     readRFID();
-    readDHT();
+    //readDHT();
 
     client.disconnect();  // disconnect from the MQTT broker
     delay(1000*1); 
 }
 
 void readRFID(void ) { /* function readRFID */
+
+    Serial.println("Reading RFID");
     ////Read RFID card
     for (byte i = 0; i < 6; i++) {
     key.keyByte[i] = 0xFF;

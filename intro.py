@@ -1,4 +1,6 @@
 import dash
+import dash_bootstrap_components as dbc
+import dash_daq as daq
 from dash import dcc, html
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
@@ -6,10 +8,10 @@ from DHT11 import loop
 from MQTTClient import subscribe
 from led import setLED
 from emailClient import sendEmail, receive_email
-from fan import turnOnFan
+#from fan import turnOnFan
 import connectionManager
-
 from DCMotor import startMotor
+
 
 global tempEmailSent
 global lightEmailSent
@@ -25,51 +27,69 @@ fan_src = '/assets/fan_off.png'
 emailRequestSent = False
 light_notif = False
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css','/assets/stylesheet2.css']
 
 
 # Starting the application.
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-#Importing and cleaning data to be used.
-
-
-
-#fan picture for dashboard
-srcImg = '/assets/fan_off.jpg'
-
 #Layout of the application (Dash components, HTML).
 app.layout = html.Div(children =[
     dcc.Interval(
         id='interval-component',
-        interval=5*1000,  # in milliseconds
+        interval=6*1000,  # in milliseconds
         n_intervals=0
     ),
-    html.Div(
-        className="temp",
-        style={'width': '50%'},
+    html.H1(style={'text-align':'center'},children=["IoT Home Dashboard"]),
+    html.Br(),html.Br(),
+    html.Table(
+        style={'width': '100%'},
         children=[
-            dcc.Graph(id='live-update-graph-temp'),
-            dcc.Graph(id='live-update-graph-humidity')
-        ]),
-    html.Div(
-        className="light",
-        style={'width': '50%', "background": "black"},
-        children=[
-            dcc.Graph(id='live-update-graph-light')
-        ]),
-    html.Img(id='fan_status', src=srcImg ,style={'width': '100%'})
-])
-
-emailSent = False
-fanTurnedOn = False
-
+            html.Tr(
+                children=[
+                    html.Th(style={'text-align':'center'},children=['Temperature and Humidity']),
+                    html.Th(style={'text-align':'center'},children=['Fan Status']),
+                    html.Th(style={'text-align':'center'},children=['Light'])
+                ]),
+            html.Tr(
+                children=[
+                    html.Td(
+                    style={'width':'33%','text-align': 'center'},
+                    children=[
+                        html.Br(),
+                        daq.Gauge(id='live-update-graph-temp', showCurrentValue=True, label='Temperature', max=50, min=0),
+                        daq.Gauge(id='live-update-graph-humidity', showCurrentValue=True, label='Humidity',max=100, min=0),
+                        html.Br()
+                    ]),
+                    html.Td(
+                    style={'width':'33%','display': 'block','margin-left':'auto','margin-right':'auto'},
+                    children=[
+                        html.Br(),
+                        html.Br(),
+                        html.Img(id='fan_status', style={'width':'250px','height':'250px'})
+                    ]),
+                    html.Td(
+                        style={'width':'33%','text-align': 'center'},
+                        children=[
+                            html.Br(),
+                            daq.Gauge(id='live-update-graph-light', showCurrentValue=True, label='Light',max=4000, min=0),
+                            html.P('LED Status'),
+                            html.Img(id='led-status'),
+                            dbc.Toast([html.P("An email has been sent.")], id='light-notification', header='Light is under 400!', dismissable=True, is_open=False,style={'width':'50%','height':'25%','margin-top':'auto'}),
+                            html.Br()
+                    ])
+            ])
+        ])
+    ])
 
 # Multiple components can update everytime interval gets fired.
 @app.callback(
-        [Output('live-update-graph-temp', 'figure'),
-         Output('live-update-graph-humidity','figure'),
-         Output('live-update-graph-light','figure')],
+        [Output('live-update-graph-temp', 'value'),
+         Output('live-update-graph-humidity','value'),
+         Output('live-update-graph-light','value'),
+         Output('led-status','src'),
+         Output('light-notification','is_open'),
+         Output('fan_status','src')],
         [Input('interval-component', 'n_intervals')])
 
 def update_graph_live(n):
@@ -81,29 +101,38 @@ def update_graph_live(n):
     global fan_src
     global light_notif
     global emailRequestSent
+    global user
 
+    # --------- DATA COLLECTION ----------------
+
+    # Fetching the User via MQTT.
+    user_rfid = str(subscribe("user_rfid"))
+    #user = connectionManager.getUser(user_rfid)
+
+    # Fetching the light data via MQTT.
     light = float(subscribe("light")) # Subscribing to the light topic
-    humidity = float(subscribe("humidity"))
-    temp = float(subscribe("temperature"))
-    user_rfid = subscribe("user_rfid")
-    user = connectionManager.getUser(user_rfid)
-    sendEmail("User " + user[3] + " has connected")
-    print(user)
-    global emailSent
-    if temp > user[1]:
-        if emailSent == False:
-            sendEmail("Current temperature is; " + str(temp) + "C would you like to turn on the fan?")
-            print("Email sent")
-            emailSent = True
-    
+
+    # Fetching the humidity and temp via RPI.
+    data = loop()
+    humidity = data[0]
+    temp = data[1]
+
+    # Sending the email that the user has connected.
+    #sendEmail("User " + user[3] + " has connected")
+
+    # Printing the fetched values.
+    print("User: ", user_rfid)
+    #print("User: ", user[3])
     print("Hum: ", humidity)
     print("Temp: ", temp)
     print("Light:", light)
 
+    # temp = user[1] & light = user[2]
+
     #  --------- NOTIFICATIONS OR ACTIONS ------------
 
     # Checking temperature and light and performing actions based on constraints.
-    if temp > user[1] and light < user[2]:
+    if temp > 25.0 and light < 400:
         led_src = '/assets/light_on.png' # Changing the LED image.
         light_notif = True # Send a notification that LED is on.
         if tempEmailSent == False: # If an email has not been sent yet.
@@ -115,7 +144,7 @@ def update_graph_live(n):
             sendEmail("The Light is under 400! Turn on the lights please.") # Send light email.
             lightEmailSent = True
             print("Light email sent!")
-    elif temp > user[1]:
+    elif temp > 25.0:
         light_notif = False # Don't send a LED notification.
         led_src = '/assets/light_off.png' # Changing the LED image.
         if tempEmailSent == False: # If an email has not been sent yet.
@@ -123,7 +152,7 @@ def update_graph_live(n):
             tempEmailSent = True # The email has been sent.
             emailRequestSent = True # Check for a response.
             print("Temperature Email Sent!") # CMD Line notification that an email has been sent.
-    elif light < user[2]:
+    elif light < 400:
         light_notif = True # Send a LED notification.
         led_src = '/assets/light_on.png' # Change the LED image.
         if lightEmailSent == False: # If an email has not been sent yet.
@@ -158,39 +187,7 @@ def update_graph_live(n):
     if (light_notif):
         setLED() # Turning on the LED.
 
-    # Create the graph with subplots
-
-    # Humidity Gauge
-    humidityFig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=humidity,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "Humidity"}))
-
-    # Temperature Gauge
-    temperatureFig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=temp,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "Temperature"}))
-
-    # Light Gauge
-    lightFig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=light,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "Light"}))
-
-    global src
-    receivedEmail = receive_email()
-    print(receivedEmail["Content"])
-    if "YES" in receivedEmail["Content"]:
-        print("Turning on the fan")
-        src='/assets/fan_on.jpg'
-        fanTurnedOn = True
-        turnOnFan()
-
-    return temperatureFig,humidityFig,lightFig
+    return temp,humidity,light,led_src,light_notif,fan_src
 
 
 
